@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pooper Troopers — Field Tracker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #060e1e; color: #e8e0cc; font-family: 'Courier New', monospace; min-height: 100vh; }
+  input, select, textarea, button { font-family: 'Courier New', monospace; }
+  input:focus, select:focus, textarea:focus { outline: none; }
+  a { text-decoration: none; }
+
+  /* HEADER */
+  #header { background: #1B3A6B; border-bottom: 2px solid #C8A84B; padding: 12px 16px; position: sticky; top: 0; z-index: 100; }
+  #header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  #brand { color: #C8A84B; font-weight: 700; font-size: 15px; letter-spacing: .1em; }
+  #subbrand { color: #ffffff44; font-size: 9px; letter-spacing: .12em; }
+  #active-count { color: #C8A84B; font-size: 13px; font-weight: 700; text-align: right; }
+  #sync-dot { font-size: 9px; letter-spacing: .08em; }
+  #tabs { display: flex; gap: 3px; }
+  .tab-btn { flex: 1; padding: 5px 2px; font-size: 9px; font-weight: 700; letter-spacing: .03em; cursor: pointer; border-radius: 4px 4px 0 0; border: 1px solid #ffffff11; border-bottom: none; background: transparent; color: #ffffff33; font-family: 'Courier New', monospace; transition: all .15s; }
+  .tab-btn.active { border-color: #C8A84B; background: #060e1e; color: #C8A84B; border-bottom: 1px solid #060e1e; }
+
+  /* CONTENT */
+  #content { padding: 12px; max-width: 600px; margin: 0 auto; }
+
+  /* CARDS */
+  .card { background: #0d1f3c; border: 1px solid #ffffff18; border-radius: 8px; margin-bottom: 8px; }
+  .card.gold-left { border-left: 3px solid #C8A84B; }
+  .card.grey-left { border-left: 3px solid #ffffff18; opacity: 0.5; }
+  .card.red-left { border-left: 3px solid #eb5757; }
+
+  /* TOOLBAR */
+  .toolbar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+
+  /* BUTTONS */
+  .btn-gold { background: #C8A84B; color: #1B3A6B; border: none; border-radius: 6px; padding: 6px 14px; font-weight: 700; font-size: 11px; cursor: pointer; letter-spacing: .06em; font-family: 'Courier New', monospace; }
+  .btn-ghost { background: transparent; border: 1px solid #ffffff22; color: #fff; border-radius: 6px; padding: 6px 14px; cursor: pointer; font-family: 'Courier New', monospace; font-size: 12px; }
+  .btn-sort { padding: 4px 8px; font-size: 9px; border-radius: 4px; border: 1px solid #ffffff22; background: transparent; color: #ffffff44; cursor: pointer; font-family: 'Courier New', monospace; font-weight: 700; }
+  .btn-sort.active { border-color: #C8A84B; background: #C8A84B22; color: #C8A84B; }
+
+  /* DAY CHIPS */
+  .chip { padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: .08em; display: inline-block; }
+
+  /* TOGGLE */
+  .toggle-wrap { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 3px 10px 3px 6px; cursor: pointer; font-size: 11px; font-weight: 700; font-family: 'Courier New', monospace; letter-spacing: .04em; white-space: nowrap; border: 1px solid; background: none; }
+  .toggle-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+  /* PAY BADGE */
+  .pay-badge { border-radius: 4px; padding: 3px 10px; font-size: 10px; font-weight: 700; cursor: pointer; font-family: 'Courier New', monospace; letter-spacing: .06em; border: 1px solid; }
+
+  /* INPUTS */
+  .inp { background: #0a1628; border: 1px solid #ffffff22; color: #e8e0cc; font-size: 12px; border-radius: 4px; padding: 5px 8px; font-family: 'Courier New', monospace; width: 100%; }
+  .inp-ghost { background: transparent; border: none; border-bottom: 1px solid #ffffff18; border-radius: 0; color: #e8e0cc; font-size: 12px; padding: 2px 4px; font-family: 'Courier New', monospace; width: 100%; }
+  .lbl { display: block; color: #ffffff44; font-size: 9px; letter-spacing: .1em; margin-bottom: 3px; }
+  select.inp, select.inp-ghost { cursor: pointer; }
+  textarea.inp { resize: vertical; line-height: 1.5; }
+
+  /* GRID */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .grid4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+
+  /* ROW */
+  .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: #000000bb; display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+  .modal { background: #0d1f3c; border: 1px solid #C8A84B; border-radius: 12px; padding: 24px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; }
+  .modal-title { color: #C8A84B; font-weight: 700; font-size: 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+  .modal-close { background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; }
+
+  /* WEEK BANNER */
+  .week-banner { background: #0d1f3c; border: 1px solid #C8A84B44; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; }
+
+  /* STATS ROW */
+  .stat-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+
+  /* HISTORY CARD */
+  .hist-row { display: flex; align-items: center; gap: 8px; padding: 5px 14px; border-bottom: 1px solid #ffffff05; }
+
+  /* EXPENSE BAR */
+  .exp-bar-wrap { width: 60px; height: 4px; background: #ffffff11; border-radius: 2px; overflow: hidden; }
+  .exp-bar { height: 100%; background: #C8A84B; border-radius: 2px; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; color: #ffffff22; padding: 40px; font-size: 12px; }
+
+  /* NAV LINK */
+  .nav-link { display: inline-flex; align-items: center; gap: 6px; background: #1a3a6b; border: 1px solid #C8A84B44; color: #C8A84B; border-radius: 6px; padding: 6px 14px; font-size: 11px; font-weight: 700; margin-bottom: 12px; letter-spacing: .06em; }
+
+  /* TOTALS BAR */
+  .totals-bar { background: #1B3A6B; border: 1px solid #C8A84B; border-radius: 8px; padding: 12px 16px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
+
+  /* PLAN BADGE */
+  .plan-badge { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; }
+
+  /* INFO BOX */
+  .info-box { background: #0d1f3c; border: 1px solid #ffffff0a; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 10px; color: #ffffff55; line-height: 1.7; }
+
+  /* CLOSE WEEK SUMMARY */
+  .cw-summary { background: #0a1628; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <div id="header-top">
+    <div>
+      <div id="brand">🐾 POOPER TROOPERS</div>
+      <div id="subbrand">FIELD OPERATIONS TRACKER</div>
+    </div>
+    <div style="text-align:right">
+      <div id="active-count">0 ACTIVE</div>
+      <div id="sync-dot" style="color:#ffffff33">● SHEETS READY</div>
+    </div>
+  </div>
+  <div id="tabs">
+    <button class="tab-btn active" onclick="switchTab('customers')">👥 ROSTER</button>
+    <button class="tab-btn" onclick="switchTab('payments')">💵 PAY</button>
+    <button class="tab-btn" onclick="switchTab('referrals')">🎖 REFS</button>
+    <button class="tab-btn" onclick="switchTab('history')">📋 HISTORY</button>
+    <button class="tab-btn" onclick="switchTab('expenses')">🧾 EXPENSES</button>
+  </div>
+</div>
+
+<div id="content"></div>
+
+<script>
+// ─── CONFIG ────────────────────────────────────────────────────────────────
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwzG8_3TnuB_GxrNN5wvrAt0YxBIAD7WnEn5NuD1KjftZAQDrANgUFLdZWgE4kTtXZnVA/exec";
+const LS_KEY = "pt_v3";
+
+// ─── STATE ─────────────────────────────────────────────────────────────────
+let state = {
+  codes: makeCodes(),
+  expenses: [],
+  paymentHistory: [],
+  weekEnding: nextSat(),
+  sortMode: "trooper",
+  showInactive: true,
+  expandedCode: null,
+  currentTab: "customers",
+};
+
+// ─── SEED DATA ──────────────────────────────────────────────────────────────
+function makeCodes() {
+  return Array.from({ length: 60 }, (_, i) => {
+    const num = String(i + 1).padStart(3, "0");
+    return { code: `TROOPER ${num}`, name: "", address: "", phone: "", email: "", plan: "1x", rate: 25, primaryDay: "Fri", secondDay: "", routeStop: "", active: true, notes: "", amountPaid: "", payMethod: "Venmo", payStatus: "Pending", ref1: "", ref2: "", ref3: "", rewardClaimed: false };
+  });
+}
+
+// ─── UTILS ──────────────────────────────────────────────────────────────────
+function amountDue(c) { return !c.name ? 0 : c.plan === "2x" ? c.rate * 2 : c.rate; }
+function refCount(c) { return [c.ref1, c.ref2, c.ref3].filter(Boolean).length; }
+function rewardLabel(n) { return n === 0 ? "—" : n === 1 ? "1 Ref — Free Clean" : n === 2 ? "2 Refs — 2 Free + $5 Off" : "3 Refs — $5 Off All Season"; }
+function mapsUrl(addr) { return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr + ", Billings, MT")}`; }
+function todayStr() { return new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }); }
+function nextSat() { const d = new Date(); const diff = (6 - d.getDay() + 7) % 7 || 7; d.setDate(d.getDate() + diff); return d.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }); }
+function esc(s) { return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+const DAY_COLORS = { Fri: { bg: "#1B3A6B", text: "#C8A84B" }, Sat: { bg: "#2E6B3E", text: "#A8D5A2" }, Tue: { bg: "#6B3A1B", text: "#F5C98A" }, Wed: { bg: "#4B1B6B", text: "#D4A8F5" }, Thu: { bg: "#1B5B6B", text: "#A8E0F5" } };
+const PAY_COLORS = { Paid: { bg: "#1a4a2a", text: "#6fcf97" }, Pending: { bg: "#4a3a1a", text: "#f2c94c" }, Late: { bg: "#4a1a1a", text: "#eb5757" } };
+const PAY_CYCLE = ["Pending", "Paid", "Late"];
+const EXPENSE_CATS = ["Fuel","Supplies","Advertising","Subscriptions","Uniforms / Gear","Equipment","Phone","Other"];
+
+function dayChip(day) {
+  if (!day) return "";
+  const c = DAY_COLORS[day] || { bg: "#333", text: "#fff" };
+  return `<span class="chip" style="background:${c.bg};color:${c.text}">${esc(day).toUpperCase()}</span>`;
+}
+function planBadge(plan) {
+  const is2x = plan === "2x";
+  return `<span class="plan-badge" style="background:${is2x ? "#1B3A6B" : "#0a1628"};color:${is2x ? "#C8A84B" : "#ffffff33"};border:1px solid ${is2x ? "#C8A84B44" : "#ffffff11"}">${plan}</span>`;
+}
+function payBadgeHtml(status, codeIdx) {
+  const c = PAY_COLORS[status] || PAY_COLORS.Pending;
+  return `<button class="pay-badge" style="background:${c.bg};color:${c.text};border-color:${c.text}44" onclick="cyclePayStatus(${codeIdx})">${esc(status).toUpperCase()}</button>`;
+}
+function toggleBtn(value, onLabel, offLabel, onColor, onclick) {
+  const color = value ? onColor : "#ffffff44";
+  const bg = value ? onColor + "22" : "#ffffff0a";
+  const border = value ? onColor : "#ffffff22";
+  return `<button class="toggle-wrap" style="color:${color};background:${bg};border-color:${border}" onclick="${onclick}"><span class="toggle-dot" style="background:${value ? onColor : "#ffffff22"}"></span>${value ? esc(onLabel) : esc(offLabel)}</button>`;
+}
+
+// ─── STORAGE ────────────────────────────────────────────────────────────────
+function saveLocal() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {}
+}
+function loadLocal() {
+  try {
+    const d = localStorage.getItem(LS_KEY);
+    if (!d) return;
+    const parsed = JSON.parse(d);
+    if (parsed.codes) state.codes = parsed.codes;
+    if (parsed.expenses) state.expenses = parsed.expenses;
+    if (parsed.paymentHistory) state.paymentHistory = parsed.paymentHistory;
+    if (parsed.weekEnding) state.weekEnding = parsed.weekEnding;
+  } catch(e) {}
+}
+
+// ─── SHEETS SYNC ────────────────────────────────────────────────────────────
+let syncTimer = null;
+function setSyncStatus(s) {
+  const dot = document.getElementById("sync-dot");
+  if (!dot) return;
+  const map = { idle: ["#ffffff33","● SHEETS READY"], syncing: ["#C8A84B","● SYNCING..."], ok: ["#6fcf97","● SYNCED ✓"], err: ["#eb5757","● SYNC ERR"] };
+  const [color, label] = map[s] || map.idle;
+  dot.style.color = color;
+  dot.textContent = label;
+}
+async function sheetSync(action, payload) {
+  try {
+    await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action, ...payload }) });
+  } catch(e) {}
+}
+function debouncedRosterSync() {
+  clearTimeout(syncTimer);
+  setSyncStatus("syncing");
+  syncTimer = setTimeout(async () => {
+    const named = state.codes.filter(c => c.name);
+    await sheetSync("syncRoster", { customers: named });
+    setSyncStatus("ok");
+    setTimeout(() => setSyncStatus("idle"), 3000);
+  }, 1500);
+}
+
+// ─── TAB SWITCHING ──────────────────────────────────────────────────────────
+function switchTab(tab) {
+  state.currentTab = tab;
+  document.querySelectorAll(".tab-btn").forEach((b, i) => {
+    const tabs = ["customers","payments","referrals","history","expenses"];
+    b.classList.toggle("active", tabs[i] === tab);
+  });
+  render();
+}
+
+// ─── MAIN RENDER ────────────────────────────────────────────────────────────
+function render() {
+  updateHeader();
+  const content = document.getElementById("content");
+  switch(state.currentTab) {
+    case "customers": content.innerHTML = renderCustomers(); break;
+    case "payments":  content.innerHTML = renderPayments(); break;
+    case "referrals": content.innerHTML = renderReferrals(); break;
+    case "history":   content.innerHTML = renderHistory(); break;
+    case "expenses":  content.innerHTML = renderExpenses(); break;
+  }
+}
+
+function updateHeader() {
+  const active = state.codes.filter(c => c.name && c.active).length;
+  const el = document.getElementById("active-count");
+  if (el) el.textContent = `${active} ACTIVE`;
+}
+
+// ─── CUSTOMERS ──────────────────────────────────────────────────────────────
+function renderCustomers() {
+  const allNamed = getSorted();
+  const visible = state.showInactive ? allNamed : allNamed.filter(c => c.active);
+
+  let html = `<div class="toolbar">
+    <button class="btn-gold" onclick="openAddCustomer()">+ ENLIST</button>
+    ${toggleBtn(state.showInactive, "ALL", "ACTIVE ONLY", "#C8A84B", "toggleShowInactive()")}
+    <div style="margin-left:auto;display:flex;gap:4px">
+      <button class="btn-sort ${state.sortMode==='trooper'?'active':''}" onclick="setSortMode('trooper')">#</button>
+      <button class="btn-sort ${state.sortMode==='route'?'active':''}" onclick="setSortMode('route')">ROUTE</button>
+      <button class="btn-sort ${state.sortMode==='day'?'active':''}" onclick="setSortMode('day')">DAY</button>
+    </div>
+  </div>`;
+
+  if (visible.length === 0) {
+    html += `<div class="empty">No troopers enlisted.<br><span style="color:#C8A84B;cursor:pointer" onclick="openAddCustomer()">+ Add first customer</span></div>`;
+    return html;
+  }
+
+  visible.forEach(c => {
+    const gi = state.codes.indexOf(c);
+    const isExp = state.expandedCode === c.code;
+    const refs = refCount(c);
+    const leftColor = c.active ? "#C8A84B" : "#ffffff18";
+
+    html += `<div class="card" style="border-left:3px solid ${leftColor};opacity:${c.active?1:0.5}">
+      <div class="row" style="padding:9px 12px;cursor:pointer" onclick="toggleExpand('${esc(c.code)}')">
+        <span style="color:#ffffff22;font-size:9px;min-width:74px;font-weight:700">${esc(c.code)}</span>
+        <span style="flex:1;font-weight:700;font-size:13px">${esc(c.name)}</span>
+        ${dayChip(c.primaryDay)}
+        ${c.secondDay ? dayChip(c.secondDay) : ""}
+        ${planBadge(c.plan)}
+        <span style="color:#ffffff22;font-size:11px">${isExp?"▲":"▼"}</span>
+      </div>`;
+
+    if (!isExp && c.routeStop) {
+      html += `<div style="padding-left:92px;padding-bottom:6px;font-size:9px;color:#ffffff33">STOP #${esc(c.routeStop)} · $${c.rate}/visit</div>`;
+    }
+
+    if (isExp) {
+      html += `<div style="border-top:1px solid #ffffff0a;padding:12px">`;
+      if (c.address) {
+        html += `<a class="nav-link" href="${mapsUrl(c.address)}" target="_blank">📍 NAVIGATE TO ${esc(c.name).toUpperCase()}</a>`;
+      }
+      html += `<div class="grid2">
+        <div><label class="lbl">NAME</label><input class="inp-ghost" value="${esc(c.name)}" onchange="updateField(${gi},'name',this.value)"></div>
+        <div><label class="lbl">ADDRESS</label><input class="inp-ghost" value="${esc(c.address)}" onchange="updateField(${gi},'address',this.value)"></div>
+        <div><label class="lbl">PHONE</label><input class="inp-ghost" value="${esc(c.phone)}" onchange="updateField(${gi},'phone',this.value)"></div>
+        <div><label class="lbl">EMAIL</label><input class="inp-ghost" value="${esc(c.email)}" onchange="updateField(${gi},'email',this.value)"></div>
+      </div>
+      <div class="grid4">
+        <div><label class="lbl">PLAN</label>
+          <select class="inp" onchange="updatePlan(${gi},this.value)">
+            <option ${c.plan==='1x'?'selected':''} value="1x">1x / $25</option>
+            <option ${c.plan==='2x'?'selected':''} value="2x">2x / $20</option>
+          </select>
+        </div>
+        <div><label class="lbl">RATE</label><input class="inp" value="$${c.rate}" onchange="updateField(${gi},'rate',parseInt(this.value.replace('$',''))||${c.rate})"></div>
+        <div><label class="lbl">PRIMARY</label>
+          <select class="inp" onchange="updateField(${gi},'primaryDay',this.value)">
+            <option ${c.primaryDay==='Fri'?'selected':''}>Fri</option>
+            <option ${c.primaryDay==='Sat'?'selected':''}>Sat</option>
+          </select>
+        </div>
+        <div><label class="lbl">2ND DAY</label>
+          <select class="inp" onchange="updateField(${gi},'secondDay',this.value)">
+            <option value="" ${!c.secondDay?'selected':''}>—</option>
+            <option ${c.secondDay==='Tue'?'selected':''}>Tue</option>
+            <option ${c.secondDay==='Wed'?'selected':''}>Wed</option>
+            <option ${c.secondDay==='Thu'?'selected':''}>Thu</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div><label class="lbl">ROUTE STOP #</label><input class="inp" value="${esc(c.routeStop)}" onchange="updateField(${gi},'routeStop',this.value)"></div>
+        <div style="padding-top:14px">${toggleBtn(c.active,"ACTIVE","PAUSED","#6fcf97",`toggleActive(${gi})`)}</div>
+      </div>
+      <div style="margin-bottom:8px"><label class="lbl">NOTES</label><textarea class="inp" rows="2" onchange="updateField(${gi},'notes',this.value)">${esc(c.notes)}</textarea></div>`;
+
+      if (refs > 0) {
+        html += `<div style="background:#1a3a1a;border:1px solid #2E6B3E44;border-radius:6px;padding:6px 10px;font-size:10px;color:#6fcf97">🎖 ${rewardLabel(refs)}${c.rewardClaimed?" ✓ CLAIMED":""}</div>`;
+      }
+      html += `</div>`;
+    }
+    html += `</div>`;
+  });
+  return html;
+}
+
+// ─── PAYMENTS ───────────────────────────────────────────────────────────────
+function renderPayments() {
+  const active = state.codes.filter(c => c.name && c.active);
+  const collected = active.filter(c => c.payStatus === "Paid").reduce((s,c) => s + (parseFloat(c.amountPaid)||0), 0);
+  const due = active.reduce((s,c) => s + amountDue(c), 0);
+  const paid = active.filter(c => c.payStatus==="Paid").length;
+  const pending = active.filter(c => c.payStatus==="Pending").length;
+  const late = active.filter(c => c.payStatus==="Late").length;
+
+  let html = `<div class="week-banner">
+    <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div>
+        <label class="lbl" style="margin-bottom:2px">WEEK ENDING</label>
+        <input class="inp" style="width:130px" value="${esc(state.weekEnding)}" onchange="state.weekEnding=this.value;saveLocal()">
+      </div>
+      <div style="text-align:right">
+        <div style="color:#ffffff44;font-size:9px;letter-spacing:.1em">COLLECTED / DUE</div>
+        <div style="color:#C8A84B;font-weight:700;font-size:18px">$${collected.toFixed(0)} <span style="color:#ffffff22;font-size:12px">/ $${due}</span></div>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span style="font-size:10px;color:#6fcf97">✓ ${paid} paid</span>
+      <span style="font-size:10px;color:#f2c94c">⏳ ${pending} pending</span>
+      <span style="font-size:10px;color:#eb5757">✗ ${late} late</span>
+      <button class="btn-gold" style="margin-left:auto;padding:5px 14px;font-size:10px" onclick="openCloseWeek()">CLOSE WEEK →</button>
+    </div>
+  </div>`;
+
+  active.forEach(c => {
+    const gi = state.codes.indexOf(c);
+    const d = amountDue(c);
+    const p = parseFloat(c.amountPaid) || 0;
+    const diff = p - d;
+    const lc = PAY_COLORS[c.payStatus] || PAY_COLORS.Pending;
+    html += `<div class="card" style="border-left:3px solid ${lc.text};${c.payStatus==='Late'?'border-color:#eb575722':'border-color:#ffffff0a'};padding:10px 12px">
+      <div class="row" style="margin-bottom:8px">
+        <span style="color:#ffffff22;font-size:9px;min-width:74px">${esc(c.code)}</span>
+        <span style="flex:1;font-weight:700;font-size:13px">${esc(c.name)}</span>
+        ${dayChip(c.primaryDay)}
+        <span style="font-size:10px;color:#ffffff44">${c.plan} · $${d} due</span>
+      </div>
+      <div class="row">
+        <div>
+          <label class="lbl">AMOUNT PAID</label>
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="color:#ffffff44">$</span>
+            <input type="number" class="inp" style="width:70px" value="${esc(c.amountPaid)}" placeholder="0" onchange="updateField(${gi},'amountPaid',this.value)">
+          </div>
+        </div>
+        <div>
+          <label class="lbl">METHOD</label>
+          <select class="inp" onchange="updateField(${gi},'payMethod',this.value)">
+            ${["Venmo","Cash","Square","Zelle","Check"].map(m=>`<option ${c.payMethod===m?'selected':''}>${m}</option>`).join("")}
+          </select>
+        </div>
+        <div>
+          <label class="lbl">STATUS</label>
+          ${payBadgeHtml(c.payStatus, gi)}
+        </div>
+        ${c.amountPaid !== "" && diff !== 0 ? `<div style="margin-left:auto;font-size:10px;color:${diff>0?'#6fcf97':'#eb5757'}">${diff>0?'+$'+diff+' over':'-$'+Math.abs(diff)+' short'}</div>` : ""}
+      </div>
+    </div>`;
+  });
+
+  if (active.length === 0) html += `<div class="empty">No active customers yet.</div>`;
+  if (active.length > 0) {
+    html += `<div class="totals-bar"><span style="font-weight:700;letter-spacing:.08em;font-size:12px">WEEKLY TOTAL COLLECTED</span><span style="color:#C8A84B;font-weight:700;font-size:16px">$${collected.toFixed(2)}</span></div>`;
+  }
+  return html;
+}
+
+// ─── REFERRALS ──────────────────────────────────────────────────────────────
+function renderReferrals() {
+  const allNamed = state.codes.filter(c => c.name);
+  let html = `<div class="info-box"><span style="color:#C8A84B;font-weight:700">TIERS: </span>1 ref = free clean · 2 refs = 2 free + $5 off · 3 refs = $5 off all season<br>New customers using a code get <span style="color:#C8A84B">$5 off first visit</span></div>`;
+
+  if (allNamed.length === 0) return html + `<div class="empty">No customers enlisted yet.</div>`;
+
+  allNamed.forEach(c => {
+    const gi = state.codes.indexOf(c);
+    const refs = refCount(c);
+    const leftColor = refs >= 3 ? "#C8A84B" : refs >= 1 ? "#6fcf97" : "#ffffff18";
+    const borderColor = refs >= 3 ? "#C8A84B44" : refs >= 1 ? "#2E6B3E44" : "#ffffff0a";
+
+    html += `<div class="card" style="border-left:3px solid ${leftColor};border-color:${borderColor};padding:10px 12px;margin-bottom:8px">
+      <div class="row" style="margin-bottom:8px">
+        <span style="color:#ffffff22;font-size:9px;min-width:74px">${esc(c.code)}</span>
+        <span style="flex:1;font-weight:700;font-size:13px">${esc(c.name)}</span>
+        ${refs > 0 ? `<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;background:${refs>=3?'#C8A84B22':'#1a4a2a'};color:${refs>=3?'#C8A84B':'#6fcf97'};border:1px solid ${refs>=3?'#C8A84B44':'#2E6B3E44'}">${refs} REF${refs!==1?"S":""}</span>` : ""}
+      </div>
+      <div class="grid3">
+        <div><label class="lbl">REFERRAL 1</label><input class="inp" style="font-size:11px;padding:3px 6px" value="${esc(c.ref1)}" placeholder="Name / code" onchange="updateField(${gi},'ref1',this.value)"></div>
+        <div><label class="lbl">REFERRAL 2</label><input class="inp" style="font-size:11px;padding:3px 6px" value="${esc(c.ref2)}" placeholder="Name / code" onchange="updateField(${gi},'ref2',this.value)"></div>
+        <div><label class="lbl">REFERRAL 3</label><input class="inp" style="font-size:11px;padding:3px 6px" value="${esc(c.ref3)}" placeholder="Name / code" onchange="updateField(${gi},'ref3',this.value)"></div>
+      </div>
+      ${refs > 0 ? `<div class="row">
+        <span style="font-size:10px;color:${refs>=3?'#C8A84B':'#6fcf97'}">🎖 ${rewardLabel(refs)}</span>
+        ${toggleBtn(c.rewardClaimed,"✓ CLAIMED","UNCLAIMED","#6fcf97",`toggleClaimed(${gi})`)}
+      </div>` : ""}
+    </div>`;
+  });
+  return html;
+}
+
+// ─── HISTORY ────────────────────────────────────────────────────────────────
+function renderHistory() {
+  let html = `<div style="color:#ffffff44;font-size:10px;margin-bottom:12px;letter-spacing:.06em">PAYMENT HISTORY — ${state.paymentHistory.length} WEEK${state.paymentHistory.length!==1?"S":""} LOGGED</div>`;
+  if (state.paymentHistory.length === 0) return html + `<div class="empty">No history yet.<br>Close your first week in the Payments tab.</div>`;
+
+  [...state.paymentHistory].reverse().forEach(week => {
+    const weekTotal = week.payments.filter(p => p.payStatus==="Paid").reduce((s,p) => s+(parseFloat(p.amountPaid)||0), 0);
+    const late = week.payments.filter(p => p.payStatus==="Late");
+    html += `<div class="card gold-left" style="margin-bottom:8px;overflow:hidden">
+      <div style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700;font-size:13px;color:#C8A84B">WEEK OF ${esc(week.weekEnding)}</div>
+          <div style="font-size:10px;color:#ffffff44;margin-top:2px">${week.payments.length} customers · ${late.length>0?`<span style="color:#eb5757">${late.length} late</span>`:`<span style="color:#6fcf97">all accounted for</span>`}</div>
+        </div>
+        <div style="color:#6fcf97;font-weight:700;font-size:16px">$${weekTotal.toFixed(2)}</div>
+      </div>
+      <div style="border-top:1px solid #ffffff08">
+        ${week.payments.map(p => {
+          const pc = PAY_COLORS[p.payStatus] || PAY_COLORS.Pending;
+          return `<div class="hist-row">
+            <span style="color:#ffffff22;font-size:9px;min-width:74px">${esc(p.code)}</span>
+            <span style="flex:1;font-size:11px">${esc(p.name)}</span>
+            <span style="font-size:10px;color:${pc.text}">${esc(p.payStatus)}</span>
+            <span style="font-size:11px;color:#ffffff66;min-width:50px;text-align:right">$${parseFloat(p.amountPaid||0).toFixed(2)}</span>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`;
+  });
+  return html;
+}
+
+// ─── EXPENSES ───────────────────────────────────────────────────────────────
+function renderExpenses() {
+  const total = state.expenses.reduce((s,e) => s+(parseFloat(e.amount)||0), 0);
+  const byCat = state.expenses.reduce((acc,e) => { acc[e.category]=(acc[e.category]||0)+parseFloat(e.amount); return acc; }, {});
+
+  let html = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div>
+      <div style="color:#ffffff44;font-size:9px;letter-spacing:.1em">TOTAL EXPENSES 2026</div>
+      <div style="color:#eb5757;font-weight:700;font-size:20px">$${total.toFixed(2)}</div>
+    </div>
+    <button class="btn-gold" onclick="openAddExpense()">+ LOG EXPENSE</button>
+  </div>`;
+
+  if (Object.keys(byCat).length > 0) {
+    html += `<div class="card" style="padding:12px;margin-bottom:12px"><label class="lbl" style="margin-bottom:8px">BY CATEGORY</label>`;
+    Object.entries(byCat).sort((a,b)=>b[1]-a[1]).forEach(([cat,amt]) => {
+      const pct = Math.min(100, (amt/total)*100);
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:11px">${esc(cat)}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="exp-bar-wrap"><div class="exp-bar" style="width:${pct}%"></div></div>
+          <span style="font-size:11px;color:#C8A84B;font-weight:700;min-width:55px;text-align:right">$${amt.toFixed(2)}</span>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (state.expenses.length === 0) return html + `<div class="empty">No expenses logged yet.</div>`;
+
+  [...state.expenses].reverse().forEach(e => {
+    html += `<div class="card red-left" style="padding:9px 12px;display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700">${esc(e.description)}</div>
+        <div style="font-size:9px;color:#ffffff44;margin-top:2px">${esc(e.date)} · ${esc(e.category)}</div>
+      </div>
+      <div style="color:#eb5757;font-weight:700;font-size:14px">-$${parseFloat(e.amount).toFixed(2)}</div>
+    </div>`;
+  });
+  return html;
+}
+
+// ─── MODALS ─────────────────────────────────────────────────────────────────
+function openAddCustomer() {
+  const empties = state.codes.map((c,i) => ({c,i})).filter(({c}) => !c.name);
+  let opts = empties.map(({c,i}) => `<option value="${i}">${esc(c.code)}</option>`).join("");
+  showModal(`
+    <div class="modal-title">+ ENLIST NEW TROOPER <button class="modal-close" onclick="closeModal()">✕</button></div>
+    <label class="lbl">ASSIGN CODE</label>
+    <select class="inp" id="m-idx" style="color:#C8A84B;font-weight:700;margin-bottom:10px">${opts}</select>
+    ${["NAME","ADDRESS","PHONE","EMAIL","ROUTE STOP #","NOTES"].map((label,i) => {
+      const keys = ["name","address","phone","email","routeStop","notes"];
+      const types = ["text","text","tel","email","text","text"];
+      return `<label class="lbl">${label}</label><input type="${types[i]}" class="inp" id="m-${keys[i]}" style="margin-bottom:10px">`;
+    }).join("")}
+    <div class="grid3" style="margin-bottom:16px">
+      <div><label class="lbl">PLAN</label>
+        <select class="inp" id="m-plan" onchange="document.getElementById('m-rate').value=this.value==='2x'?20:25">
+          <option value="1x">1x / $25</option><option value="2x">2x / $20</option>
+        </select>
+      </div>
+      <div><label class="lbl">PRIMARY DAY</label>
+        <select class="inp" id="m-primaryDay"><option>Fri</option><option>Sat</option></select>
+      </div>
+      <div><label class="lbl">2ND DAY</label>
+        <select class="inp" id="m-secondDay"><option value="">—</option><option>Tue</option><option>Wed</option><option>Thu</option></select>
+      </div>
+    </div>
+    <input type="hidden" id="m-rate" value="25">
+    <div style="display:flex;gap:10px">
+      <button class="btn-ghost" onclick="closeModal()">CANCEL</button>
+      <button class="btn-gold" style="flex:2;padding:10px" onclick="saveNewCustomer()">ENLIST TROOPER</button>
+    </div>
+  `);
+}
+
+function saveNewCustomer() {
+  const idx = parseInt(document.getElementById("m-idx").value);
+  const fields = ["name","address","phone","email","routeStop","notes","plan","primaryDay","secondDay","rate"];
+  const vals = {};
+  fields.forEach(f => { const el = document.getElementById("m-"+f); vals[f] = el ? el.value : ""; });
+  vals.rate = parseInt(vals.rate) || 25;
+  state.codes[idx] = { ...state.codes[idx], ...vals };
+  saveLocal();
+  debouncedRosterSync();
+  closeModal();
+  render();
+}
+
+function openAddExpense() {
+  showModal(`
+    <div class="modal-title">+ LOG EXPENSE <button class="modal-close" onclick="closeModal()">✕</button></div>
+    <label class="lbl">DATE</label><input class="inp" id="e-date" value="${todayStr()}" style="margin-bottom:10px">
+    <label class="lbl">DESCRIPTION</label><input class="inp" id="e-desc" placeholder="e.g. Gas fill-up, bags..." style="margin-bottom:10px">
+    <label class="lbl">CATEGORY</label>
+    <select class="inp" id="e-cat" style="margin-bottom:10px" onchange="document.getElementById('e-custom-wrap').style.display=this.value==='Other'?'block':'none'">
+      ${EXPENSE_CATS.map(c=>`<option>${c}</option>`).join("")}
+    </select>
+    <div id="e-custom-wrap" style="display:none;margin-bottom:10px">
+      <label class="lbl">CUSTOM CATEGORY</label><input class="inp" id="e-custom" placeholder="Enter category...">
+    </div>
+    <label class="lbl">AMOUNT ($)</label><input type="number" class="inp" id="e-amount" placeholder="0.00" style="margin-bottom:16px">
+    <div style="display:flex;gap:10px">
+      <button class="btn-ghost" onclick="closeModal()">CANCEL</button>
+      <button class="btn-gold" style="flex:2;padding:10px" onclick="saveExpense()">LOG IT</button>
+    </div>
+  `);
+}
+
+async function saveExpense() {
+  const date = document.getElementById("e-date").value;
+  const desc = document.getElementById("e-desc").value;
+  const cat = document.getElementById("e-cat").value;
+  const custom = document.getElementById("e-custom").value;
+  const amount = parseFloat(document.getElementById("e-amount").value);
+  if (!desc || !amount) return;
+  const expense = { date, description: desc, category: cat === "Other" && custom ? custom : cat, amount };
+  state.expenses.push(expense);
+  saveLocal();
+  closeModal();
+  setSyncStatus("syncing");
+  await sheetSync("syncExpenses", { expense });
+  setSyncStatus("ok");
+  setTimeout(() => setSyncStatus("idle"), 3000);
+  render();
+}
+
+function openCloseWeek() {
+  const active = state.codes.filter(c => c.name && c.active);
+  const collected = active.filter(c => c.payStatus==="Paid").reduce((s,c)=>s+(parseFloat(c.amountPaid)||0),0);
+  const pending = active.filter(c => c.payStatus==="Pending").length;
+  const late = active.filter(c => c.payStatus==="Late").length;
+  showModal(`
+    <div class="modal-title">📋 CLOSE WEEK — ${esc(state.weekEnding)} <button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="cw-summary">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="color:#ffffff66;font-size:11px">TOTAL COLLECTED</span>
+        <span style="color:#6fcf97;font-weight:700;font-size:18px">$${collected.toFixed(2)}</span>
+      </div>
+      ${pending > 0 ? `<div style="color:#f2c94c;font-size:11px;margin-bottom:4px">⚠ ${pending} PENDING</div>` : ""}
+      ${late > 0 ? `<div style="color:#eb5757;font-size:11px">✗ ${late} LATE</div>` : ""}
+    </div>
+    <p style="color:#ffffff66;font-size:11px;line-height:1.7;margin-bottom:16px">This saves this week to Google Sheets permanently and resets payments for next week. Cannot be undone.</p>
+    <div style="display:flex;gap:10px">
+      <button class="btn-ghost" onclick="closeModal()">CANCEL</button>
+      <button class="btn-gold" style="flex:2;padding:10px;font-size:12px" onclick="confirmCloseWeek()">CONFIRM & CLOSE WEEK</button>
+    </div>
+  `);
+}
+
+async function confirmCloseWeek() {
+  const active = state.codes.filter(c => c.name && c.active);
+  const payments = active.map(c => ({ code: c.code, name: c.name, plan: c.plan, amountDue: amountDue(c), amountPaid: parseFloat(c.amountPaid)||0, payStatus: c.payStatus }));
+  state.paymentHistory.push({ weekEnding: state.weekEnding, payments, savedAt: new Date().toISOString() });
+  setSyncStatus("syncing");
+  await sheetSync("syncPayments", { week: { weekEnding: state.weekEnding, payments } });
+  setSyncStatus("ok");
+  setTimeout(() => setSyncStatus("idle"), 3000);
+  state.codes = state.codes.map(c => ({ ...c, amountPaid: "", payStatus: "Pending" }));
+  state.weekEnding = nextSat();
+  saveLocal();
+  closeModal();
+  render();
+}
+
+function showModal(html) {
+  let overlay = document.getElementById("modal-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "modal-overlay";
+    overlay.className = "modal-overlay";
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = `<div class="modal">${html}</div>`;
+  overlay.style.display = "flex";
+}
+function closeModal() {
+  const o = document.getElementById("modal-overlay");
+  if (o) o.style.display = "none";
+}
+
+// ─── ACTIONS ────────────────────────────────────────────────────────────────
+function toggleExpand(code) {
+  state.expandedCode = state.expandedCode === code ? null : code;
+  render();
+}
+function toggleShowInactive() {
+  state.showInactive = !state.showInactive;
+  render();
+}
+function setSortMode(mode) {
+  state.sortMode = mode;
+  render();
+}
+function toggleActive(gi) {
+  state.codes[gi].active = !state.codes[gi].active;
+  saveLocal();
+  debouncedRosterSync();
+  render();
+}
+function toggleClaimed(gi) {
+  state.codes[gi].rewardClaimed = !state.codes[gi].rewardClaimed;
+  saveLocal();
+  debouncedRosterSync();
+  render();
+}
+function updateField(gi, field, value) {
+  state.codes[gi][field] = value;
+  saveLocal();
+  debouncedRosterSync();
+}
+function updatePlan(gi, value) {
+  state.codes[gi].plan = value;
+  state.codes[gi].rate = value === "2x" ? 20 : 25;
+  saveLocal();
+  debouncedRosterSync();
+  render();
+}
+function cyclePayStatus(gi) {
+  const cur = state.codes[gi].payStatus;
+  state.codes[gi].payStatus = PAY_CYCLE[(PAY_CYCLE.indexOf(cur) + 1) % PAY_CYCLE.length];
+  saveLocal();
+  debouncedRosterSync();
+  render();
+}
+
+function getSorted() {
+  const named = state.codes.filter(c => c.name);
+  return [...named].sort((a,b) => {
+    if (state.sortMode === "route") return (parseInt(a.routeStop)||999)-(parseInt(b.routeStop)||999);
+    if (state.sortMode === "day") { const o={Fri:0,Sat:1,Tue:2,Wed:3,Thu:4,"":5}; return (o[a.primaryDay]??5)-(o[b.primaryDay]??5); }
+    return a.code.localeCompare(b.code);
+  });
+}
+
+// ─── INIT ───────────────────────────────────────────────────────────────────
+loadLocal();
+
+// Seed Mary and James if no saved data
+if (!state.codes[0].name) {
+  state.codes[0] = { ...state.codes[0], name: "Mary", address: "1329 Rimrock Rd", phone: "(406) 670-5089", plan: "1x", rate: 25, primaryDay: "Fri", active: true };
+  state.codes[1] = { ...state.codes[1], name: "James Thigpen", address: "2717 Poly Drive", phone: "(509) 859-6629", plan: "1x", rate: 25, primaryDay: "Fri", active: true, routeStop: "1", notes: "Front gate on East side. Referred by Mary." };
+  saveLocal();
+}
+
+render();
+</script>
+</body>
+</html>
